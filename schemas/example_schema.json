@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "required": [
+    "input",
+    "output",
+    "category",
+    "difficulty"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "input": {
+      "type": "string",
+      "minLength": 5
+    },
+    "output": {
+      "type": "string",
+      "minLength": 5
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "support",
+        "sales",
+        "robotics",
+        "general"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    }
+  }
+}

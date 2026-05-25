@@ -1,0 +1,15 @@
+Generate {batch_size} synthetic training examples.
+
+Schema:
+{schema}
+
+Dataset goal:
+Create realistic text examples for assistant training.
+
+Required diversity:
+- Mix short and medium examples.
+- Include easy, medium, and hard cases.
+- Include at least one edge case when batch size allows.
+- Avoid repeating names, phrasing, or structure.
+
+Return exactly {batch_size} JSONL lines.

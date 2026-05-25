@@ -1,0 +1,18 @@
+[project]
+name = "datagen-thor"
+version = "0.1.0"
+description = "Local synthetic text data generation on Thor"
+requires-python = ">=3.10"
+dependencies = [
+    "jsonschema>=4.22.0",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "tqdm>=4.66.4",
+    "openai>=1.40.0",
+]
+
+[project.optional-dependencies]
+vllm = ["vllm"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
