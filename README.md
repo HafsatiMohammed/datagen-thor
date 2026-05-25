@@ -6,14 +6,8 @@ Default path:
 - **Ollama** for quick setup and local generation.
 - Optional **vLLM/OpenAI-compatible server** for higher-throughput batching later.
 
-## 1. Unzip on Thor
 
-```bash
-unzip datagen-thor.zip
-cd datagen-thor
-```
-
-## 2. Create Python env
+## 1. Create Python env
 
 ```bash
 python3 -m venv .venv
@@ -22,7 +16,7 @@ pip install -U pip
 pip install -e .
 ```
 
-## 3. Install Ollama on Thor
+## 2. Install Ollama on Thor
 
 ```bash
 bash scripts/install_ollama.sh
@@ -35,7 +29,7 @@ ollama -v
 sudo systemctl status ollama --no-pager
 ```
 
-## 4. Pull a model
+## 3. Pull a model
 
 Recommended default:
 
@@ -56,7 +50,7 @@ ollama list
 ollama pull qwen2.5:14b-instruct
 ```
 
-## 5. Configure
+## 4. Configure
 
 ```bash
 cp .env.example .env
@@ -64,7 +58,7 @@ cp .env.example .env
 
 Edit `.env` if needed.
 
-## 6. Run sample generation
+## 5. Run sample generation
 
 ```bash
 source .venv/bin/activate
