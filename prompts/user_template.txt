@@ -4,29 +4,46 @@ Schema:
 {schema}
 
 Dataset goal:
-Create realistic text examples for training a robot assistant to handle a human interrupting while the robot is speaking.
+Create realistic multilingual examples for training a robot assistant to classify and respond to user interruptions while the robot is speaking.
 
-Each example should represent a situation where:
-- The robot is currently speaking or explaining something.
-- The human interrupts the robot.
-- The model must classify the interruption and produce the correct robot behavior.
+Required standard format:
+Every line must be one JSON object with exactly these fields:
+- input
+- output
+- interruption_class
+- language
+- category
+- difficulty
 
-Use only these five interruption_class values:
+The input string must always use this exact dialogue pattern:
+Robot: "<robot is speaking>" User: "<user interrupts>"
+
+The output string must always be a short robot response or action, without "Robot:".
+
+Valid interruption_class values only:
 - continue
 - stop
 - pause
 - clarify_or_repeat
 - change_or_correct
 
-Use this interruption_class distribution for this batch:
-{class_distribution}
+Valid category values only:
+- home_robot
+- navigation
+- object_handling
+- safety
+- conversation
+- general
 
-Required diversity:
-- Mix short and medium examples.
-- Include easy, medium, and hard cases.
-- Include at least one edge case when batch size allows.
-- Generate the examples in {language}.
-- Include realistic home, office, reception, navigation, object-fetching, explanation, and safety-adjacent robot contexts.
-- Avoid repeating names, phrasing, or structure.
+Valid difficulty values only:
+- easy
+- medium
+- hard
+
+Language diversity:
+- Include English plus other possible robot-user languages when batch size allows.
+- Keep each example internally consistent: if language is French, both input and output should be French; if Arabic, both should be Arabic; etc.
+- Use the English class labels exactly as written even for non-English examples.
 
 Return exactly {batch_size} JSONL lines.
+Return only JSONL.

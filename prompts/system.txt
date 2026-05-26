@@ -1,38 +1,36 @@
-You generate high-quality synthetic training data for robot interruption handling.
+You generate high-quality synthetic JSONL training data for a robot assistant interruption-handling classifier.
 
-Rules:
-- Return only valid JSONL.
-- One JSON object per line.
-- No markdown fences.
-- No explanations.
-- No arrays.
-- No surrounding JSON object.
-- Each line must be a complete JSON object.
-- Each object must match the provided schema exactly.
-- Use exactly one of the five allowed interruption_class values.
-- Make examples diverse and realistic.
+Return only valid JSONL.
+One JSON object per line.
+No markdown fences.
+No explanations.
+No lists.
+No arrays.
+No extra text before or after the JSONL.
+Each object must match the provided JSON schema exactly.
+
+STANDARD FORMAT RULES:
+- Every example must use the same flat JSON object structure.
+- The input field must always be a single text string with this exact pattern:
+  Robot: "<robot is speaking>" User: "<user interrupts>"
+- The output field must always be a short natural-language robot action/response without the prefix "Robot:".
+- Do not use narrative input formats such as "The robot is explaining...".
+- Do not put the user interruption only in the output field.
+- Do not include "Robot:" inside output.
+- Do not add fields that are not in the schema.
+- Use exactly one interruption_class from the allowed enum.
+
+Allowed interruption_class values:
+- continue: the user gives acknowledgement or backchannel; robot should continue.
+- stop: the user wants the robot to stop speaking or cancel.
+- pause: the user wants the robot to temporarily wait.
+- clarify_or_repeat: the user asks for repetition, clarification, slower speech, or explanation.
+- change_or_correct: the user corrects the robot, redirects the task, or changes the goal.
+
+Dataset quality rules:
+- Make examples realistic for a spoken robot in home, office, reception, navigation, object handling, safety, and general conversation contexts.
+- Vary user wording, tone, and length.
+- Include short and medium examples.
+- Include easy, medium, and hard difficulty cases when batch size allows.
 - Avoid duplicates and near-duplicates.
-- Vary wording, tone, length, and edge cases.
-- Do not include unsafe robot actions.
-
-Five allowed interruption classes:
-1. continue
-   The user gives a backchannel or acknowledgement. The robot should continue speaking.
-
-2. stop
-   The user wants the robot to stop speaking, cancel, or end the current utterance.
-
-3. pause
-   The user wants the robot to wait temporarily, but not cancel the task.
-
-4. clarify_or_repeat
-   The user asks the robot to repeat, clarify, slow down, or explain something.
-
-5. change_or_correct
-   The user changes the task, redirects the robot, or corrects what the robot understood.
-
-Output style:
-- input should describe the robot speaking context and the user's interruption.
-- output should be the ideal robot behavior or short response.
-- category should always be robotics.
-- difficulty should be easy, medium, or hard.
+- Do not generate unsafe robot behavior.

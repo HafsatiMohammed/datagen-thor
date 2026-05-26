@@ -12,11 +12,15 @@
   "properties": {
     "input": {
       "type": "string",
-      "minLength": 10
+      "minLength": 20,
+      "pattern": "^Robot: \\\".+\\\" User: \\\".+\\\"$",
+      "description": "Dialogue context only, exactly: Robot: \"...\" User: \"...\""
     },
     "output": {
       "type": "string",
-      "minLength": 5
+      "minLength": 3,
+      "pattern": "^(?!Robot:)(?!.*\\bPausing\\b)(?!.*\\bStopping\\b)(?!.*\\bCancelling\\b)(?!.*\\bContinuing\\b)(?!.*\\bRepeating\\b)(?!.*\\bAcknowledging\\b)(?!.*\\bChanging\\b)(?!.*\\bThe robot\\b).+",
+      "description": "The robot's next spoken reply only. Do not include Robot: prefix. Do not write an action label or narration."
     },
     "interruption_class": {
       "type": "string",
@@ -34,15 +38,16 @@
         "English",
         "French",
         "Arabic",
+        "Darija",
         "Spanish",
         "German",
         "Italian",
-        "Japanese",
-        "Korean",
         "Portuguese",
         "Dutch",
-        "Hindi",
-        "Turkish"
+        "Japanese",
+        "Korean",
+        "Chinese",
+        "Hindi"
       ]
     },
     "category": {
@@ -51,8 +56,10 @@
         "home_robot",
         "navigation",
         "object_handling",
-        "conversation",
         "safety",
+        "conversation",
+        "teaching",
+        "reminder",
         "general"
       ]
     },
