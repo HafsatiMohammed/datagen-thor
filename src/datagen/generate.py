@@ -47,6 +47,20 @@ def parse_class_ratios(spec: str, allowed_classes: list[str]) -> dict[str, float
     return ratios
 
 
+def resolve_requested_language(requested_language: str, allowed_languages: list[str]) -> str:
+    if requested_language.strip().lower() == "multilingual":
+        return "multilingual"
+
+    normalized = {language.lower(): language for language in allowed_languages}
+    key = requested_language.strip().lower()
+    if key not in normalized:
+        raise ValueError(
+            f"Unknown language '{requested_language}'. Allowed values: multilingual, "
+            + ", ".join(allowed_languages)
+        )
+    return normalized[key]
+
+
 def allocate_counts(total: int, weights: dict[str, float], ordered_keys: list[str]) -> dict[str, int]:
     if total <= 0:
         return {key: 0 for key in ordered_keys}
@@ -86,6 +100,13 @@ def filter_rows_to_class_targets(rows: list[dict], class_targets: dict[str, int]
         seen[class_name] += 1
 
     return accepted
+
+
+def filter_rows_to_language(rows: list[dict], requested_language: str) -> list[dict]:
+    if requested_language.strip().lower() == "multilingual":
+        return rows
+
+    return [row for row in rows if row.get("language") == requested_language]
 
 
 def make_batches(total: int, batch_size: int) -> list[int]:
@@ -139,6 +160,8 @@ def main() -> None:
     template = read_text(args.template)
     validator = Draft202012Validator(schema)
     allowed_classes = schema["properties"]["interruption_class"]["enum"]
+    allowed_languages = schema["properties"]["language"]["enum"]
+    args.language = resolve_requested_language(args.language, allowed_languages)
     class_ratios = parse_class_ratios(args.class_ratios, allowed_classes) if args.class_ratios else None
 
     if args.provider == "ollama":
@@ -232,6 +255,8 @@ def main() -> None:
                 errors = sorted(validator.iter_errors(row), key=lambda e: e.path)
                 if not errors:
                     good_rows.append(row)
+
+            good_rows = filter_rows_to_language(good_rows, args.language)
 
             if batch_class_targets:
                 good_rows = filter_rows_to_class_targets(good_rows, batch_class_targets)

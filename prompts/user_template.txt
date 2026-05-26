@@ -4,7 +4,7 @@ Schema:
 {schema}
 
 Dataset goal:
-Create realistic multilingual examples for training a robot assistant to classify and respond to user interruptions while the robot is speaking.
+Create realistic examples for training a robot assistant to classify and respond to user interruptions while the robot is speaking.
 
 Required standard format:
 Every line must be one JSON object with exactly these fields:
@@ -40,8 +40,10 @@ Valid difficulty values only:
 - medium
 - hard
 
-Language diversity:
-- Include English plus other possible robot-user languages when batch size allows.
+Language requirement:
+- Generate examples only in: {language}
+- If {language} is English, every example must have `language` set to `English` and both `input` and `output` must be fully in English.
+- If {language} is multilingual, you may mix languages from the schema enum across the batch.
 - Keep each example internally consistent: if language is French, both input and output should be French; if Arabic, both should be Arabic; etc.
 - Use the English class labels exactly as written even for non-English examples.
 
