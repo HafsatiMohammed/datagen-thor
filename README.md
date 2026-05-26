@@ -110,6 +110,44 @@ python -m datagen.generate \
 
 Ratios are converted into exact row targets across the requested count. In `--resume` mode, existing rows are taken into account.
 
+## Config-driven detached runs
+
+Edit the config file:
+
+```bash
+bash/config/generate.conf
+```
+
+The config controls:
+- `BATCH_SIZE`
+- `LANGUAGES`
+- `COUNTS` per language
+- `CLASS_RATIOS` per language
+- `OUTPUT_FILES` per language
+- shared model, schema, prompt, and mode settings
+
+Start a detached run that keeps going after you close the terminal:
+
+```bash
+bash bash/start_generation.sh bash/config/generate.conf
+```
+
+Monitor the active run:
+
+```bash
+bash bash/monitor_generation.sh
+```
+
+Stop the active run:
+
+```bash
+bash bash/stop_generation.sh
+```
+
+Runtime files:
+- Logs are written under `bash/logs/`
+- PID and status files are written under `bash/state/`
+
 Validate and dedupe:
 
 ```bash
