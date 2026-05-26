@@ -67,11 +67,48 @@ python -m datagen.generate \
   --model qwen3:14b \
   --count 100 \
   --batch-size 10 \
+  --language English \
   --schema schemas/example_schema.json \
   --system prompts/system.txt \
   --template prompts/user_template.txt \
   --out outputs/sample.jsonl
 ```
+
+Resume generation into the same file until it reaches a target total row count:
+
+```bash
+python -m datagen.generate \
+  --provider ollama \
+  --model qwen3:14b \
+  --count 100 \
+  --batch-size 10 \
+  --language English \
+  --schema schemas/example_schema.json \
+  --system prompts/system.txt \
+  --template prompts/user_template.txt \
+  --out outputs/sample.jsonl \
+  --resume
+```
+
+Use `--append` if you want to add `--count` more rows regardless of how many already exist.
+Use `--language` to control the generated language, for example `English`, `French`, `Arabic`, or `multilingual`.
+Use `--class-ratios` to control the interruption_class mix, for example:
+
+```bash
+python -m datagen.generate \
+  --provider ollama \
+  --model qwen3:14b \
+  --count 100 \
+  --batch-size 10 \
+  --language English \
+  --class-ratios 'continue=0.3,stop=0.2,pause=0.2,clarify_or_repeat=0.2,change_or_correct=0.1' \
+  --schema schemas/example_schema.json \
+  --system prompts/system.txt \
+  --template prompts/user_template.txt \
+  --out outputs/sample.jsonl
+```
+
+Ratios are converted into exact row targets across the requested count. In `--resume` mode, existing rows are taken into account.
 
 Validate and dedupe:
 
@@ -102,6 +139,7 @@ python -m datagen.generate \
   --model Qwen/Qwen3-14B \
   --count 100 \
   --batch-size 10 \
+  --language English \
   --schema schemas/example_schema.json \
   --system prompts/system.txt \
   --template prompts/user_template.txt \

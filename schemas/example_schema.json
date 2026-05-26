@@ -3,6 +3,8 @@
   "required": [
     "input",
     "output",
+    "interruption_class",
+    "language",
     "category",
     "difficulty"
   ],
@@ -10,18 +12,47 @@
   "properties": {
     "input": {
       "type": "string",
-      "minLength": 5
+      "minLength": 10
     },
     "output": {
       "type": "string",
       "minLength": 5
     },
+    "interruption_class": {
+      "type": "string",
+      "enum": [
+        "continue",
+        "stop",
+        "pause",
+        "clarify_or_repeat",
+        "change_or_correct"
+      ]
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "English",
+        "French",
+        "Arabic",
+        "Spanish",
+        "German",
+        "Italian",
+        "Japanese",
+        "Korean",
+        "Portuguese",
+        "Dutch",
+        "Hindi",
+        "Turkish"
+      ]
+    },
     "category": {
       "type": "string",
       "enum": [
-        "support",
-        "sales",
-        "robotics",
+        "home_robot",
+        "navigation",
+        "object_handling",
+        "conversation",
+        "safety",
         "general"
       ]
     },
