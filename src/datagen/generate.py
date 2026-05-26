@@ -198,55 +198,58 @@ def main() -> None:
     generated = 0
     valid = existing_rows if args.resume else 0
     remaining_total = sum(remaining_class_counts.values()) if remaining_class_counts else target_count
+    requested_this_run = remaining_total
     max_attempts = max(3, len(make_batches(max(remaining_total, 1), args.batch_size)) * 3)
     attempts = 0
 
-    while remaining_total > 0 and attempts < max_attempts:
-        batch_n = min(args.batch_size, remaining_total)
-        if remaining_class_counts:
-            batch_class_targets = allocate_counts(batch_n, remaining_class_counts, allowed_classes)
-            class_distribution = format_class_distribution(batch_class_targets)
-        else:
-            batch_class_targets = None
-            class_distribution = "- Balance interruption_class values naturally across the batch."
-
-        prompt = template.format(
-            batch_size=batch_n,
-            schema=schema_text,
-            language=args.language,
-            class_distribution=class_distribution,
-        )
-        text = client.generate(
-            model=args.model,
-            prompt=prompt,
-            system=system,
-            temperature=args.temperature,
-            max_tokens=args.max_tokens,
-        )
-        rows = parse_jsonl_response(text)
-
-        good_rows = []
-        for row in rows:
-            errors = sorted(validator.iter_errors(row), key=lambda e: e.path)
-            if not errors:
-                good_rows.append(row)
-
-        if batch_class_targets:
-            good_rows = filter_rows_to_class_targets(good_rows, batch_class_targets)
-
-        if not batch_class_targets:
-            good_rows = good_rows[:batch_n]
-
-        if good_rows:
-            append_jsonl(out_path, good_rows)
-            valid += len(good_rows)
-            remaining_total -= len(good_rows)
+    with tqdm(total=requested_this_run, desc="Generating") as progress:
+        while remaining_total > 0 and attempts < max_attempts:
+            batch_n = min(args.batch_size, remaining_total)
             if remaining_class_counts:
-                for row in good_rows:
-                    remaining_class_counts[row["interruption_class"]] -= 1
+                batch_class_targets = allocate_counts(batch_n, remaining_class_counts, allowed_classes)
+                class_distribution = format_class_distribution(batch_class_targets)
+            else:
+                batch_class_targets = None
+                class_distribution = "- Balance interruption_class values naturally across the batch."
 
-        generated += batch_n
-        attempts += 1
+            prompt = template.format(
+                batch_size=batch_n,
+                schema=schema_text,
+                language=args.language,
+                class_distribution=class_distribution,
+            )
+            text = client.generate(
+                model=args.model,
+                prompt=prompt,
+                system=system,
+                temperature=args.temperature,
+                max_tokens=args.max_tokens,
+            )
+            rows = parse_jsonl_response(text)
+
+            good_rows = []
+            for row in rows:
+                errors = sorted(validator.iter_errors(row), key=lambda e: e.path)
+                if not errors:
+                    good_rows.append(row)
+
+            if batch_class_targets:
+                good_rows = filter_rows_to_class_targets(good_rows, batch_class_targets)
+
+            if not batch_class_targets:
+                good_rows = good_rows[:batch_n]
+
+            if good_rows:
+                append_jsonl(out_path, good_rows)
+                valid += len(good_rows)
+                remaining_total -= len(good_rows)
+                progress.update(len(good_rows))
+                if remaining_class_counts:
+                    for row in good_rows:
+                        remaining_class_counts[row["interruption_class"]] -= 1
+
+            generated += batch_n
+            attempts += 1
 
     if args.resume:
         print(f"Existing rows: {existing_rows}")
@@ -255,6 +258,8 @@ def main() -> None:
     else:
         print(f"Requested: {generated}")
     print(f"Valid rows written: {valid}")
+    if remaining_total > 0:
+        print(f"Rows still missing after retries: {remaining_total}")
     if remaining_class_counts:
         print("Remaining class targets: " + ", ".join(f"{key}={value}" for key, value in remaining_class_counts.items()))
     print(f"Output: {out_path}")
