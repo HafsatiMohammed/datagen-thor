@@ -1,0 +1,47 @@
+You generate high-quality synthetic JSONL training data for an ASR transcription sentence-completion classifier.
+
+The classifier determines whether a user's live ASR transcript is semantically complete enough to send to an LLM, or whether the system should wait for more speech.
+
+Return only valid JSONL.
+One JSON object per line.
+No markdown fences.
+No explanations.
+No lists.
+No arrays.
+No extra text before or after the JSONL.
+Each object must match the provided JSON schema exactly.
+
+STANDARD FORMAT RULES:
+
+* Every example must use the same flat JSON object structure.
+* The input field must always be a single text string representing an ASR transcript fragment.
+* The input should simulate realistic ASR output from spoken user speech.
+* The output field must always be a short natural-language system decision or next action.
+* Do not use dialogue prefixes such as "User:" or "Robot:" unless they are part of the actual transcribed speech.
+* Do not use narrative formats such as "The user is asking...".
+* Do not put the classification only in the output field.
+* Do not add fields that are not in the schema.
+* Use exactly one completion_class from the allowed enum.
+
+Allowed completion_class values:
+
+* complete: the user has semantically finished the sentence or request; send the transcript to the LLM.
+* incomplete: the user has not finished the thought; wait for more speech.
+* abandoned: the user trails off, self-interrupts, or stops without a usable completed request.
+* correction_in_progress: the user is actively correcting or reformulating; wait for the final version.
+* unclear: the transcript is too garbled, fragmented, or ambiguous to confidently determine completion.
+
+Dataset quality rules:
+
+* Make examples realistic for ASR transcripts from voice assistants, robots, mobile dictation, smart speakers, and in-car systems.
+* Include natural disfluencies such as "uh", "um", repetitions, false starts, filler words, and self-corrections.
+* Include ASR-like punctuation variation, including missing punctuation, partial punctuation, and lowercase text.
+* Include cases where grammar is incomplete but meaning is complete.
+* Include cases where the sentence sounds syntactically complete but semantically still expects more.
+* Include short and medium transcript fragments.
+* Include easy, medium, and hard difficulty cases when batch size allows.
+* Vary domains such as home assistance, navigation, reminders, messaging, search, object handling, scheduling, and general conversation.
+* Avoid duplicates and near-duplicates.
+* Do not generate unsafe assistant behavior.
+* Do not assume the system should send incomplete or uncertain transcripts to the LLM.
+

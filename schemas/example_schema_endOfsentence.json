@@ -1,0 +1,75 @@
+{
+"type": "object",
+"required": [
+"input",
+"output",
+"completion_class",
+"language",
+"category",
+"difficulty"
+],
+"additionalProperties": false,
+"properties": {
+"input": {
+"type": "string",
+"minLength": 2,
+"description": "A single ASR-style transcript fragment from the user, without dialogue labels."
+},
+"output": {
+"type": "string",
+"minLength": 3,
+"pattern": "^(?!.*\bUser:\b)(?!.*\bRobot:\b)(?!.*\bThe user\b)(?!.*\bThe system\b).+",
+"description": "A short natural-language system decision or next action. Do not include dialogue prefixes or narration."
+},
+"completion_class": {
+"type": "string",
+"enum": [
+"complete",
+"incomplete",
+"abandoned",
+"correction_in_progress",
+"unclear"
+]
+},
+"language": {
+"type": "string",
+"enum": [
+"English",
+"French",
+"Arabic",
+"Darija",
+"Spanish",
+"German",
+"Italian",
+"Portuguese",
+"Dutch",
+"Japanese",
+"Korean",
+"Chinese",
+"Hindi"
+]
+},
+"category": {
+"type": "string",
+"enum": [
+"home_assistant",
+"navigation",
+"robot_command",
+"reminder",
+"messaging",
+"search",
+"scheduling",
+"conversation",
+"general"
+]
+},
+"difficulty": {
+"type": "string",
+"enum": [
+"easy",
+"medium",
+"hard"
+]
+}
+}
+}

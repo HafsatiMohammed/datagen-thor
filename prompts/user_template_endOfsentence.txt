@@ -1,0 +1,69 @@
+Generate {batch_size} synthetic training examples.
+
+Schema:
+{schema}
+
+Dataset goal:
+Create realistic examples for training a classifier that decides whether a live ASR transcript from a user is semantically complete enough to send to an LLM.
+
+Required standard format:
+Every line must be one JSON object with exactly these fields:
+
+* input
+* output
+* completion_class
+* language
+* category
+* difficulty
+
+The input string must be a single ASR-style transcript fragment.
+It should look like what a speech recognizer might output while the user is speaking.
+Do not use dialogue labels such as "User:" or "Robot:" unless the person literally said those words.
+
+The output string must be a short system action or decision, without any prefix.
+
+Valid completion_class values only:
+
+* complete
+* incomplete
+* abandoned
+* correction_in_progress
+* unclear
+
+Valid category values only:
+
+* home_assistant
+* navigation
+* robot_command
+* reminder
+* messaging
+* search
+* scheduling
+* conversation
+* general
+
+Valid difficulty values only:
+
+* easy
+* medium
+* hard
+
+Language requirement:
+
+* Generate examples only in: {language}
+* If {language} is English, every example must have `language` set to `English` and both `input` and `output` must be fully in English.
+* If {language} is multilingual, you may mix languages from the schema enum across the batch.
+* Keep each example internally consistent: if language is French, both input and output should be French; if Arabic, both should be Arabic; etc.
+* Use the English class labels exactly as written even for non-English examples.
+
+Completion labeling guidance:
+
+* Use complete when the transcript contains a finished request, command, question, answer, or statement that can be sent to the LLM.
+* Use incomplete when the transcript clearly expects continuation, such as ending after a connector, preposition, unfinished list, unfinished comparison, or incomplete intent.
+* Use abandoned when the user starts but does not produce a usable request, trails off, gives up, or stops mid-thought.
+* Use correction_in_progress when the user is actively revising, replacing, or correcting the utterance and the final intended wording is not yet stable.
+* Use unclear when ASR noise, garbling, missing words, or ambiguous fragments make completion status uncertain.
+
+Return exactly {batch_size} JSONL lines.
+Return only JSONL.
+
