@@ -68,10 +68,11 @@ python -m datagen.generate \
   --count 100 \
   --batch-size 10 \
   --language English \
-  --schema schemas/example_schema.json \
-  --system prompts/system.txt \
-  --template prompts/user_template.txt \
-  --out outputs/sample.jsonl
+  --class-ratios 'complete=0.35,incomplete=0.25,abandoned=0.15,correction_in_progress=0.15,unclear=0.10' \
+  --schema schemas/example_schema_endOfsentence.json \
+  --system prompts/system_endOfsentence.txt \
+  --template prompts/user_template_endOfsentence.txt \
+  --out outputs/sample.endofturn.jsonl
 ```
 
 Resume generation into the same file until it reaches a target total row count:
@@ -83,16 +84,17 @@ python -m datagen.generate \
   --count 100 \
   --batch-size 10 \
   --language English \
-  --schema schemas/example_schema.json \
-  --system prompts/system.txt \
-  --template prompts/user_template.txt \
-  --out outputs/sample.jsonl \
+  --class-ratios 'complete=0.35,incomplete=0.25,abandoned=0.15,correction_in_progress=0.15,unclear=0.10' \
+  --schema schemas/example_schema_endOfsentence.json \
+  --system prompts/system_endOfsentence.txt \
+  --template prompts/user_template_endOfsentence.txt \
+  --out outputs/sample.endofturn.jsonl \
   --resume
 ```
 
 Use `--append` if you want to add `--count` more rows regardless of how many already exist.
 Use `--language` to control the generated language, for example `English`, `French`, `Arabic`, or `multilingual`.
-Use `--class-ratios` to control the interruption_class mix, for example:
+Use `--class-ratios` to control the `completion_class` mix, for example:
 
 ```bash
 python -m datagen.generate \
@@ -101,11 +103,11 @@ python -m datagen.generate \
   --count 100 \
   --batch-size 10 \
   --language English \
-  --class-ratios 'continue=0.3,stop=0.2,pause=0.2,clarify_or_repeat=0.2,change_or_correct=0.1' \
-  --schema schemas/example_schema.json \
-  --system prompts/system.txt \
-  --template prompts/user_template.txt \
-  --out outputs/sample.jsonl
+  --class-ratios 'complete=0.35,incomplete=0.25,abandoned=0.15,correction_in_progress=0.15,unclear=0.10' \
+  --schema schemas/example_schema_endOfsentence.json \
+  --system prompts/system_endOfsentence.txt \
+  --template prompts/user_template_endOfsentence.txt \
+  --out outputs/sample.endofturn.jsonl
 ```
 
 Ratios are converted into exact row targets across the requested count. In `--resume` mode, existing rows are taken into account.
@@ -151,8 +153,8 @@ Runtime files:
 Validate and dedupe:
 
 ```bash
-python -m datagen.validate --schema schemas/example_schema.json --input outputs/sample.jsonl
-python -m datagen.dedupe --input outputs/sample.jsonl --output outputs/sample.deduped.jsonl
+python -m datagen.validate --schema schemas/example_schema_endOfsentence.json --input outputs/sample.endofturn.jsonl
+python -m datagen.dedupe --input outputs/sample.endofturn.jsonl --output outputs/sample.endofturn.deduped.jsonl
 ```
 
 ## vLLM option
@@ -178,23 +180,26 @@ python -m datagen.generate \
   --count 100 \
   --batch-size 10 \
   --language English \
-  --schema schemas/example_schema.json \
-  --system prompts/system.txt \
-  --template prompts/user_template.txt \
-  --out outputs/sample.vllm.jsonl
+  --class-ratios 'complete=0.35,incomplete=0.25,abandoned=0.15,correction_in_progress=0.15,unclear=0.10' \
+  --schema schemas/example_schema_endOfsentence.json \
+  --system prompts/system_endOfsentence.txt \
+  --template prompts/user_template_endOfsentence.txt \
+  --out outputs/sample.endofturn.vllm.jsonl
 ```
 
 ## Output contract
 
-The generator asks the model to return JSONL, one object per line. Each row must validate against `schemas/example_schema.json`.
+The generator asks the model to return JSONL, one object per line. Each row must validate against `schemas/example_schema_endOfsentence.json`.
 
 Default row shape:
 
 ```json
 {
-  "input": "user text",
-  "output": "ideal answer",
-  "category": "support|sales|robotics|general",
+  "input": "set a timer for ten minutes",
+  "output": "Send the transcript to the LLM.",
+  "completion_class": "complete|incomplete|abandoned|correction_in_progress|unclear",
+  "language": "English|French|Arabic|...",
+  "category": "home_assistant|navigation|robot_command|reminder|messaging|search|scheduling|conversation|general",
   "difficulty": "easy|medium|hard"
 }
 ```

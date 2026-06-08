@@ -14,7 +14,17 @@ from .io import append_jsonl, read_json, read_jsonl, read_text
 from .parse import parse_jsonl_response
 
 
-def parse_class_ratios(spec: str, allowed_classes: list[str]) -> dict[str, float]:
+def find_class_field(schema: dict) -> str:
+    class_fields = [name for name in schema.get("properties", {}) if name.endswith("_class")]
+    if len(class_fields) != 1:
+        raise ValueError(
+            "Schema must define exactly one *_class field. "
+            f"Found: {', '.join(class_fields) if class_fields else 'none'}"
+        )
+    return class_fields[0]
+
+
+def parse_class_ratios(spec: str, allowed_classes: list[str], class_field: str) -> dict[str, float]:
     ratios: dict[str, float] = {}
     for item in spec.split(","):
         part = item.strip()
@@ -22,10 +32,10 @@ def parse_class_ratios(spec: str, allowed_classes: list[str]) -> dict[str, float
             continue
         key, sep, value = part.partition("=")
         if sep != "=":
-            raise ValueError(f"Invalid class ratio '{part}'. Use interruption_class=weight.")
+            raise ValueError(f"Invalid class ratio '{part}'. Use <class_value>=weight.")
         class_name = key.strip()
         if class_name not in allowed_classes:
-            raise ValueError(f"Unknown interruption_class '{class_name}'. Allowed values: {', '.join(allowed_classes)}")
+            raise ValueError(f"Unknown {class_field} '{class_name}'. Allowed values: {', '.join(allowed_classes)}")
         try:
             weight = float(value.strip())
         except ValueError as exc:
@@ -38,7 +48,7 @@ def parse_class_ratios(spec: str, allowed_classes: list[str]) -> dict[str, float
     if missing:
         raise ValueError(
             "Missing class ratios for: " + ", ".join(missing) + ". "
-            "Specify all classes, for example continue=0.2,stop=0.2,pause=0.2,clarify_or_repeat=0.2,change_or_correct=0.2"
+            + "Specify all class values in key=value form."
         )
 
     if sum(ratios.values()) <= 0:
@@ -86,12 +96,12 @@ def format_class_distribution(counts: dict[str, int]) -> str:
     return "\n".join(f"- {class_name}: {count}" for class_name, count in counts.items())
 
 
-def filter_rows_to_class_targets(rows: list[dict], class_targets: dict[str, int]) -> list[dict]:
+def filter_rows_to_class_targets(rows: list[dict], class_targets: dict[str, int], class_field: str) -> list[dict]:
     accepted: list[dict] = []
     seen = {class_name: 0 for class_name in class_targets}
 
     for row in rows:
-        class_name = row.get("interruption_class")
+        class_name = row.get(class_field)
         if class_name not in class_targets:
             continue
         if seen[class_name] >= class_targets[class_name]:
@@ -139,8 +149,8 @@ def main() -> None:
     parser.add_argument(
         "--class-ratios",
         help=(
-            "Comma-separated interruption_class weights, for example "
-            "'continue=0.4,stop=0.2,pause=0.15,clarify_or_repeat=0.15,change_or_correct=0.1'."
+            "Comma-separated class weights, for example "
+            "'complete=0.35,incomplete=0.25,abandoned=0.15,correction_in_progress=0.15,unclear=0.10'."
         ),
     )
     parser.add_argument("--temperature", type=float, default=float(os.getenv("DATAGEN_TEMPERATURE", "0.7")))
@@ -159,10 +169,11 @@ def main() -> None:
     system = read_text(args.system)
     template = read_text(args.template)
     validator = Draft202012Validator(schema)
-    allowed_classes = schema["properties"]["interruption_class"]["enum"]
+    class_field = find_class_field(schema)
+    allowed_classes = schema["properties"][class_field]["enum"]
     allowed_languages = schema["properties"]["language"]["enum"]
     args.language = resolve_requested_language(args.language, allowed_languages)
-    class_ratios = parse_class_ratios(args.class_ratios, allowed_classes) if args.class_ratios else None
+    class_ratios = parse_class_ratios(args.class_ratios, allowed_classes, class_field) if args.class_ratios else None
 
     if args.provider == "ollama":
         client = OllamaClient()
@@ -177,7 +188,7 @@ def main() -> None:
             existing_data = read_jsonl(out_path)
             existing_rows = len(existing_data)
             for row in existing_data:
-                class_name = row.get("interruption_class")
+                class_name = row.get(class_field)
                 if class_name in existing_class_counts:
                     existing_class_counts[class_name] += 1
         elif not args.append:
@@ -233,7 +244,7 @@ def main() -> None:
                 class_distribution = format_class_distribution(batch_class_targets)
             else:
                 batch_class_targets = None
-                class_distribution = "- Balance interruption_class values naturally across the batch."
+                class_distribution = f"- Balance {class_field} values naturally across the batch."
 
             prompt = template.format(
                 batch_size=batch_n,
@@ -259,7 +270,7 @@ def main() -> None:
             good_rows = filter_rows_to_language(good_rows, args.language)
 
             if batch_class_targets:
-                good_rows = filter_rows_to_class_targets(good_rows, batch_class_targets)
+                good_rows = filter_rows_to_class_targets(good_rows, batch_class_targets, class_field)
 
             if not batch_class_targets:
                 good_rows = good_rows[:batch_n]
@@ -271,7 +282,7 @@ def main() -> None:
                 progress.update(len(good_rows))
                 if remaining_class_counts:
                     for row in good_rows:
-                        remaining_class_counts[row["interruption_class"]] -= 1
+                        remaining_class_counts[row[class_field]] -= 1
 
             generated += batch_n
             attempts += 1
